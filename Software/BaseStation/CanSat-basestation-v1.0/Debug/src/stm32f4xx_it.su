@@ -1,0 +1,3 @@
+stm32f4xx_it.c:33:6:SysTick_Handler	8	static
+stm32f4xx_it.c:42:6:USART6_IRQHandler	8	static
+stm32f4xx_it.c:49:6:ADCx_DMA_IRQHandler	8	static
