@@ -18,6 +18,7 @@
 
 /* Private variables ---------------------------------------------------------*/
 extern UART_HandleTypeDef huart6;
+extern UART_HandleTypeDef huart3;
 extern ADC_HandleTypeDef    AdcHandle;
 
 
@@ -43,6 +44,13 @@ void USART6_IRQHandler(void)
 {
 
   HAL_UART_IRQHandler(&huart6);
+
+}
+
+void USART3_IRQHandler(void)
+{
+
+  HAL_UART_IRQHandler(&huart3);
 
 }
 

@@ -276,14 +276,14 @@ void Error_Handler(void);
 #define D4_GPIO_Port GPIOE
 #define D7_Pin GPIO_PIN_10
 #define D7_GPIO_Port GPIOE
-#define D9_Pin GPIO_PIN_12
-#define D9_GPIO_Port GPIOE
-#define D12_Pin GPIO_PIN_15
-#define D12_GPIO_Port GPIOE
-#define D10_Pin GPIO_PIN_13
-#define D10_GPIO_Port GPIOE
-#define STLK_TX_Pin GPIO_PIN_11
-#define STLK_TX_GPIO_Port GPIOB
+#define D9_Pin 							GPIO_PIN_12
+#define D9_GPIO_Port 					GPIOE
+#define D12_Pin 						GPIO_PIN_15
+#define D12_GPIO_Port 					GPIOE
+#define D10_Pin 						GPIO_PIN_13
+#define D10_GPIO_Port 					GPIOE
+#define STLK_TX_Pin 					GPIO_PIN_11
+#define STLK_TX_GPIO_Port 				GPIOB
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */

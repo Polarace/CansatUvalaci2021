@@ -3029,7 +3029,7 @@ static HAL_StatusTypeDef UART_Receive_IT(UART_HandleTypeDef *huart)
   {
     return HAL_BUSY;
   }
-}
+ }
 
 /**
   * @brief  Configures the UART peripheral.

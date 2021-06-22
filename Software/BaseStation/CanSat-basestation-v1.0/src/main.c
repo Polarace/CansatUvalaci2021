@@ -34,14 +34,28 @@ extern LTDC_HandleTypeDef           hltdc_eval;
 #define RECT_WIDTH					32
 #define RECT_HEIGHT					32
 
+
+#define	BACKSPACE				'\177'
+
+uint8_t NEWLINE = '\n';
+
+
 /* Private variables ---------------------------------------------------------*/
 TS_StateTypeDef TS_State = {0};
 UART_HandleTypeDef huart6;
+UART_HandleTypeDef huart3;
 GPIO_InitTypeDef GPIO_InitStruct = {0};
 
-
-char data[16] = {0};
+uint8_t dataint = 0;
+uint8_t data[16] = {0};
+uint8_t nodata[16] = {0};
 uint8_t databyte = 0x00;
+//uint8_t datasend = 'b';
+uint8_t  	lcd_status = LCD_OK;
+
+uint32_t currentcolor = 0x00;
+
+
 
 /* static const uint32_t * Images[] =
 {
@@ -53,23 +67,19 @@ uint8_t databyte = 0x00;
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_NVIC_Init(void);
-static void UART_Init(void);
+static void UART6_Init(void);
+static void UART3_Init(void);
+static void LTCD_Init(void);
+
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart);
 void debugPrint(UART_HandleTypeDef *huart, char _out[]);
 
+//static void BSP_LCD_DrawThiccLine(uint16_t x, uint16_t y, uint16_t xx, uint16_t yy, uint8_t thiccness);
 
 /* Private user code ---------------------------------------------------------*/
 int main(void)
 {
-
-	__HAL_RCC_USART6_CLK_ENABLE();
-
-	uint8_t  	lcd_status = LCD_OK;
-
-
-	uint32_t	penDrawX = 0;
-	uint32_t	penDrawY = 0;
 
 
 	HAL_Init();
@@ -80,91 +90,28 @@ int main(void)
 	MX_GPIO_Init();
 	MX_NVIC_Init();
 
-	UART_Init();
+	UART6_Init();
+	UART3_Init();
+	LTCD_Init();
 
-	lcd_status = BSP_LCD_Init();
+	//BSP_LCD_DrawThiccLine(100, 100, 250, 370, 10);
 
-	if(lcd_status != LCD_OK)
-	{
-		Error_Handler();
-	}
+	debugPrint(&huart6, "\n\rWelcome my dudes\n\r");
 
-
-
-	HAL_UART_Receive_IT(&huart6, &databyte  , 1);
-
-
-	BSP_LCD_LayerDefaultInit(0, LAYER0_ADDRESS);
-	BSP_LCD_SelectLayer(0);
-
-	BSP_TS_Init(DISPLAY_SIZE_X, DISPLAY_SIZE_Y);
-	BSP_LCD_Clear(LCD_COLOR_WHITE);
-	BSP_LCD_SetBackColor(LCD_COLOR_WHITE);
-	BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
-
-	BSP_LCD_SetFont(&Font20);
-	BSP_LCD_DisplayStringAt(0, 200, (uint8_t*) "lesgoo", CENTER_MODE);
-
-
-	BSP_LCD_SetBackColor(LCD_COLOR_GRAY);
-	BSP_LCD_DisplayOn();
+	debugPrint(&huart3, "\n\rWelcome my dudes\n\r");
 
 
 
-
-
+	BSP_LCD_SetTextColor(LCD_COLOR_RED);
 
 	while (1)
 	{
-		/*
-		HAL_GPIO_TogglePin(GPIOG, GPIO_PIN_6);
-		HAL_Delay(500);
-		*/
 
-		BSP_TS_GetState(&TS_State);
+		BSP_LCD_FillRect(200, 275, 50, 50);
 
-		if(TS_State.touchDetected)
-		{
-			penDrawX = 0;
-			penDrawY = 0;
-
-			HAL_GPIO_WritePin(GPIOG, GPIO_PIN_6, GPIO_PIN_RESET);
-
-			if(TS_State.touchX[0] < CIRCLE_RADIUS)
-			{
-				penDrawX = TS_State.touchX[0] + CIRCLE_RADIUS + 3;
-			}
-			else if(TS_State.touchX[0] > DISPLAY_SIZE_X - CIRCLE_RADIUS)
-			{
-				penDrawX = TS_State.touchX[0] - CIRCLE_RADIUS - 3;
-			}
-			else
-			{
-				penDrawX = TS_State.touchX[0];
-			}
-			if(TS_State.touchY[0] < CIRCLE_RADIUS)
-			{
-				penDrawY = TS_State.touchY[0] + CIRCLE_RADIUS + 3;
-			}
-			else if(TS_State.touchY[0] > DISPLAY_SIZE_X - CIRCLE_RADIUS)
-			{
-				penDrawY = TS_State.touchY[0] - CIRCLE_RADIUS - 3;
-			}
-			else
-			{
-				penDrawY = TS_State.touchY[0];
-			}
-
-			//BSP_LCD_FillRect(TS_State.touchX[0], TS_State.touchY[0], RECT_WIDTH, RECT_HEIGHT);
-			BSP_LCD_FillCircle(penDrawX, penDrawY, CIRCLE_RADIUS);
-
-
-		} else {
-			HAL_GPIO_WritePin(GPIOG, GPIO_PIN_6, GPIO_PIN_SET);
-		}
-
-
-
+		BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
+		BSP_LCD_DisplayStringAt(50, 300, "Detekce", LEFT_MODE);
+		BSP_LCD_SetTextColor(currentcolor);
 	}
 }
 
@@ -571,17 +518,22 @@ static void MX_GPIO_Init(void)
 
 static void MX_NVIC_Init(void)
 {
-  /* USART6_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(USART6_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(USART6_IRQn);
+	/* USART3_IRQn interrupt configuration */
+	HAL_NVIC_SetPriority(USART3_IRQn, 0, 0);
+	HAL_NVIC_EnableIRQ(USART3_IRQn);
+	/* USART6_IRQn interrupt configuration */
+	HAL_NVIC_SetPriority(USART6_IRQn, 0, 0);
+	HAL_NVIC_EnableIRQ(USART6_IRQn);
 }
 
-static void UART_Init(void)
+
+static void UART6_Init(void)
 {
+
 	__HAL_RCC_USART6_CLK_ENABLE();
 
 	huart6.Instance = USART6;
-	huart6.Init.BaudRate = 9600;
+	huart6.Init.BaudRate = 115200;
 	huart6.Init.WordLength = UART_WORDLENGTH_8B;
 	huart6.Init.StopBits = UART_STOPBITS_1;
 	huart6.Init.Parity = UART_PARITY_NONE;
@@ -592,8 +544,125 @@ static void UART_Init(void)
 	{
 	  Error_Handler();
 	}
+
+	HAL_UART_Receive_IT(&huart6, &databyte, 1);
+
 }
 
+
+static void UART3_Init(void)
+{
+
+	__HAL_RCC_USART3_CLK_ENABLE();
+
+	huart3.Instance = USART3;
+	huart3.Init.BaudRate = 115200;
+	huart3.Init.WordLength = UART_WORDLENGTH_8B;
+	huart3.Init.StopBits = UART_STOPBITS_1;
+	huart3.Init.Parity = UART_PARITY_NONE;
+	huart3.Init.Mode = UART_MODE_TX_RX;
+	huart3.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+	huart3.Init.OverSampling = UART_OVERSAMPLING_16;
+	if (HAL_UART_Init(&huart3) != HAL_OK)
+	{
+	  Error_Handler();
+	}
+
+	HAL_UART_Receive_IT(&huart3, &databyte, 1);
+
+}
+
+static void LTCD_Init(void)
+{
+	lcd_status = BSP_LCD_Init();
+
+	if(lcd_status != LCD_OK)
+	{
+		Error_Handler();
+	}
+
+	BSP_LCD_LayerDefaultInit(0, LAYER0_ADDRESS);
+	BSP_LCD_SelectLayer(0);
+
+	BSP_TS_Init(DISPLAY_SIZE_X, DISPLAY_SIZE_Y);
+	BSP_LCD_Clear(LCD_COLOR_WHITE);
+	BSP_LCD_SetBackColor(LCD_COLOR_WHITE);
+	BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
+	BSP_LCD_SetFont(&Font24);
+
+	BSP_LCD_DisplayOn();
+}
+
+/*static void BSP_LCD_DrawThiccLine(uint16_t x, uint16_t y, uint16_t xx, uint16_t yy, uint8_t thiccness)
+{
+	for(int yettothicc = 0; yettothicc< thiccness; yettothicc++)
+	{
+		BSP_LCD_DrawLine(x , y + yettothicc, xx , yy + yettothicc);
+	}
+}
+*/
+
+void debugPrint(UART_HandleTypeDef *huart, char _out[]){
+ HAL_UART_Transmit(huart, (uint8_t *) _out, strlen(_out), 10);
+}
+
+
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+	HAL_UART_Receive_IT(huart, &databyte, 1);
+
+	if(huart == &huart3)
+	{
+		if(databyte == '\r')
+		{
+			BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
+			BSP_LCD_Clear(LCD_COLOR_WHITE);
+
+			BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
+			BSP_LCD_DisplayStringAt(100, 50, &data, LEFT_MODE);
+
+			BSP_LCD_SetTextColor(currentcolor);
+
+
+			HAL_UART_Transmit(huart, &databyte, 1, 100);
+			HAL_UART_Transmit(huart, &NEWLINE, 1, 100);
+
+			for(int clearbuffer = 0; clearbuffer < 16; clearbuffer ++)
+			{
+				data[clearbuffer] = 0x00;
+				dataint = 0;
+			}
+		}
+		else if(databyte == BACKSPACE)
+		{
+			dataint--;
+			data[dataint] = 0x00;
+			HAL_UART_Transmit(huart, '\127', 1, 100);
+		}
+		else
+		{
+			HAL_UART_Transmit(huart, &databyte, 1, 100);
+			data[dataint] = databyte;
+			dataint++;
+		}
+	}
+	else if(huart == &huart6)
+	{
+		if(databyte == '1')
+		{
+			BSP_LCD_SetTextColor(LCD_COLOR_GREEN);
+		}
+		else
+		{
+			BSP_LCD_SetTextColor(LCD_COLOR_RED);
+		}
+
+		currentcolor = BSP_LCD_GetTextColor();
+
+		HAL_UART_Transmit(huart, &databyte, 1, 100);
+	}
+
+}
 
 
 /**
@@ -614,22 +683,6 @@ void Error_Handler(void)
 
   /* USER CODE END Error_Handler_Debug */
 }
-
-
-void debugPrint(UART_HandleTypeDef *huart, char _out[]){
- HAL_UART_Transmit(huart, (uint8_t *) _out, strlen(_out), 10);
-
-}
-
-
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
-{
-	HAL_UART_Transmit(&huart6, &databyte, 1, 100);
-	BSP_LED_On(LED_GREEN);
-	HAL_UART_Receive_IT(&huart6, &databyte, 1);
-	BSP_LED_Off(LED_GREEN);
-}
-
 
 
 #ifdef  USE_FULL_ASSERT
