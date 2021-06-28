@@ -46,6 +46,7 @@ UART_HandleTypeDef huart6;
 UART_HandleTypeDef huart3;
 GPIO_InitTypeDef GPIO_InitStruct = {0};
 
+
 uint8_t dataint = 0;
 uint8_t data[16] = {0};
 uint8_t nodata[16] = {0};
