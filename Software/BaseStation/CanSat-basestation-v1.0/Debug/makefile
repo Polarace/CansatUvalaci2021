@@ -84,8 +84,8 @@ all: main-build
 main-build: CanSat-basestation-v1.0.elf secondary-outputs
 
 # Tool invocations
-CanSat-basestation-v1.0.elf: $(OBJS) $(USER_OBJS) E:\Projects\CansatUvalaci2021\Software\BaseStation\CanSat-basestation-v1.0\LinkerScript.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "CanSat-basestation-v1.0.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"E:\Projects\CansatUvalaci2021\Software\BaseStation\CanSat-basestation-v1.0\LinkerScript.ld" --specs=nosys.specs -Wl,-Map="CanSat-basestation-v1.0.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+CanSat-basestation-v1.0.elf: $(OBJS) $(USER_OBJS) C:\Users\adam\Desktop\git\CansatUvalaci2021\Software\BaseStation\CanSat-basestation-v1.0\LinkerScript.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "CanSat-basestation-v1.0.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\adam\Desktop\git\CansatUvalaci2021\Software\BaseStation\CanSat-basestation-v1.0\LinkerScript.ld" --specs=nosys.specs -Wl,-Map="CanSat-basestation-v1.0.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
